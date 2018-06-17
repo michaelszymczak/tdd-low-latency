@@ -27,6 +27,25 @@ public class EchoServerTest {
     echoServerManager.stop();
   }
 
+  @Test(timeout = 2000)
+  public void shouldApplyPredefinedCalculationsBeforeReturningTheResult() throws Exception {
+    Processor doublingServerSideProcessor = input -> input * 2;
+    EchoServerManager echoServerManager = new EchoServerManager(doublingServerSideProcessor);
+    Port serverPort = echoServerManager.startAndListen();
+    OneOffBlockingClient client = new OneOffBlockingClient(serverPort);
+
+    // when
+    long result = client.send(100L);
+
+
+    // then
+    assertEquals(200L, result);
+
+
+    // cleanup
+    echoServerManager.stop();
+  }
+
   @Test
   public void shouldHandleMultipleRequests() throws Exception {
     EchoServerManager echoServerManager = new EchoServerManager();

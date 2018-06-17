@@ -6,28 +6,23 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Created 17/06/18.
  */
 public class EchoServer {
 
-  private final int port;
+  private final Processor processor;
   private ServerSocket serverSocket;
   private Socket clientSocket;
 
-  public EchoServer(int port) {
-    if (port < 1024) {
-      throw new IllegalArgumentException("Port below 1024 not allowed");
-    }
-    this.port = port;
-  }
-
-  public EchoServer() {
-    this.port = 0;
+  public EchoServer(Processor processor) {
+    this.processor = requireNonNull(processor);
   }
 
   public Port start() throws IOException {
-    this.serverSocket = new ServerSocket(port);
+    this.serverSocket = new ServerSocket(0);
     return new Port(serverSocket.getLocalPort());
   }
 
@@ -39,7 +34,7 @@ public class EchoServer {
               DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream())
       ) {
         while (!Thread.currentThread().isInterrupted()) {
-          out.writeLong(in.readLong());
+          out.writeLong(processor.processed(in.readLong()));
         }
       }
     } catch (Exception e) {
