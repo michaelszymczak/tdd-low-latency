@@ -25,17 +25,31 @@ public class RoundTripTest {
 
   @Test
   public void shouldReturnSentNumber() throws Exception {
-    final RoundTrip roundTrip = new RoundTrip();
+    EchoServerManager echoServerManager = new EchoServerManager();
+    Port serverPort = echoServerManager.startAndListen();
+    ConnectionKeepingBlockingClient client = new ConnectionKeepingBlockingClient(serverPort);
+    client.connect();
+    final RoundTrip roundTrip = new RoundTrip(client);
 
+
+    // expect
     assertEquals(MIN_VALUE, roundTrip.send(MIN_VALUE));
     assertEquals(0, roundTrip.send(0));
     assertEquals(1, roundTrip.send(1));
     assertEquals(MAX_VALUE, roundTrip.send(MAX_VALUE));
+
+    // cleanup
+    client.connect();
   }
 
   @Test
   public void shouldHaveAcceptableLatency() throws Exception {
-    final RoundTrip roundTrip = new RoundTrip();
+    EchoServerManager echoServerManager = new EchoServerManager();
+    Port serverPort = echoServerManager.startAndListen();
+    ConnectionKeepingBlockingClient client = new ConnectionKeepingBlockingClient(serverPort);
+    client.connect();
+    final RoundTrip roundTrip = new RoundTrip(client);
+
     final JLBHResultConsumer results = newThreadSafeInstance();
     final JLBH jlbh = new JLBH(parametersWhenTesting(roundTrip), System.out, results);
 
@@ -45,9 +59,12 @@ public class RoundTripTest {
     // then
     JLBHResult.RunResult latency = results.get().endToEnd().summaryOfLastRun();
     assertThat(String.format("Worst end to end latency was %d microseconds", latency.getWorst().toNanos() / 1000),
-            latency.getWorst(), lessThan(ms(1)));
+            latency.getWorst(), lessThan(ms(5)));
     assertThat(String.format("99.9th percentile latency was %d microseconds", latency.getWorst().toNanos() / 1000),
-            latency.get999thPercentile(), lessThan(us(50)));
+            latency.get999thPercentile(), lessThan(us(200)));
+
+    // cleanup
+    client.close();
   }
 
   @NotNull
