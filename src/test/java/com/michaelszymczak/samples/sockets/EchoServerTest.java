@@ -27,5 +27,28 @@ public class EchoServerTest {
     echoServerManager.stop();
   }
 
+  @Test
+  public void shouldHandleMultipleRequests() throws Exception {
+    EchoServerManager echoServerManager = new EchoServerManager();
+    Port serverPort = echoServerManager.startAndListen();
+    ConnectionKeepingBlockingClient client = new ConnectionKeepingBlockingClient(serverPort);
+    client.connect();
+    client.send(1);
+    client.send(2);
+    client.send(3);
+
+    // when
+    long result1 = client.send(4L);
+
+
+    // then
+    assertEquals(4L, result1);
+
+
+    // cleanup
+    client.close();
+    echoServerManager.stop();
+  }
+
 
 }

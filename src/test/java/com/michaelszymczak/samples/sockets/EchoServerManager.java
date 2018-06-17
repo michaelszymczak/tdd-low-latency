@@ -1,7 +1,5 @@
 package com.michaelszymczak.samples.sockets;
 
-import net.openhft.chronicle.core.io.Closeable;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;

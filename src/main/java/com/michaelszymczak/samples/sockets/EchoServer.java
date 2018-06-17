@@ -38,7 +38,9 @@ public class EchoServer {
               DataInputStream in = new DataInputStream(clientSocket.getInputStream());
               DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream())
       ) {
-        out.writeLong(in.readLong());
+        while (!Thread.currentThread().isInterrupted()) {
+          out.writeLong(in.readLong());
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
