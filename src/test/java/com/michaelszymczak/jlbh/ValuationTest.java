@@ -51,7 +51,7 @@ public class ValuationTest {
     JLBHResult.RunResult latency = results.get().endToEnd().summaryOfLastRun();
     assertThat(String.format("Worst end to end latency was %d microseconds", latency.getWorst().toNanos() / 1000),
             latency.getWorst(), lessThan(ms(1)));
-    assertThat(String.format("99.9th percentile latency was %d microseconds", latency.getWorst().toNanos() / 1000),
+    assertThat(String.format("99.9th percentile latency was %d microseconds", latency.get999thPercentile().toNanos() / 1000),
             latency.get999thPercentile(), lessThan(us(50)));
   }
 

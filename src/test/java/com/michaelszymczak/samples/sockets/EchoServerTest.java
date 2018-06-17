@@ -13,7 +13,7 @@ public class EchoServerTest {
   public void shouldRespondWithTheSameValue() throws Exception {
     EchoServerManager echoServerManager = new EchoServerManager();
     Port serverPort = echoServerManager.startAndListen();
-    OneOffBlockingClient client = new OneOffBlockingClient(serverPort);
+    LocalhostOneOffClient client = new LocalhostOneOffClient(serverPort);
 
     // when
     long result1 = client.send(12345L);
@@ -32,7 +32,7 @@ public class EchoServerTest {
     Processor doublingServerSideProcessor = input -> input * 2;
     EchoServerManager echoServerManager = new EchoServerManager(doublingServerSideProcessor);
     Port serverPort = echoServerManager.startAndListen();
-    OneOffBlockingClient client = new OneOffBlockingClient(serverPort);
+    LocalhostOneOffClient client = new LocalhostOneOffClient(serverPort);
 
     // when
     long result = client.send(100L);
@@ -50,7 +50,7 @@ public class EchoServerTest {
   public void shouldHandleMultipleRequests() throws Exception {
     EchoServerManager echoServerManager = new EchoServerManager();
     Port serverPort = echoServerManager.startAndListen();
-    ConnectionKeepingBlockingClient client = new ConnectionKeepingBlockingClient(serverPort);
+    Client client = new ConnectionKeepingBlockingClient(serverPort);
     client.connect();
     client.send(1);
     client.send(2);

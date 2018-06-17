@@ -10,14 +10,20 @@ import static java.net.InetAddress.getLocalHost;
 /**
  * Created 17/06/18.
  */
-public class OneOffBlockingClient {
+public class LocalhostOneOffClient implements Client {
 
   private final Port serverPort;
 
-  public OneOffBlockingClient(Port serverPort) {
+  public LocalhostOneOffClient(Port serverPort) {
     this.serverPort = serverPort;
   }
 
+  @Override
+  public void connect() throws IOException {
+
+  }
+
+  @Override
   public long send(long value) throws IOException {
     try (
             Socket client = new Socket(getLocalHost(), serverPort.asInt());
@@ -27,5 +33,10 @@ public class OneOffBlockingClient {
       out.writeLong(value);
       return in.readLong();
     }
+  }
+
+  @Override
+  public void close() throws IOException {
+
   }
 }

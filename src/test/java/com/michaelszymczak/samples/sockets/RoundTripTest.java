@@ -7,10 +7,12 @@ import net.openhft.chronicle.core.jlbh.JLBHResultConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+import java.net.InetAddress;
 import java.time.Duration;
 
 import static java.lang.Long.MAX_VALUE;
 import static java.lang.Long.MIN_VALUE;
+import static java.net.InetAddress.getLocalHost;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofNanos;
 import static net.openhft.chronicle.core.jlbh.JLBHResultConsumer.newThreadSafeInstance;
@@ -27,7 +29,7 @@ public class RoundTripTest {
   public void shouldReturnSentNumber() throws Exception {
     EchoServerManager echoServerManager = new EchoServerManager();
     Port serverPort = echoServerManager.startAndListen();
-    ConnectionKeepingBlockingClient client = new ConnectionKeepingBlockingClient(serverPort);
+    Client client = new ConnectionKeepingBlockingClient(serverPort);
     client.connect();
     final RoundTrip roundTrip = new RoundTrip(client);
 
@@ -44,10 +46,9 @@ public class RoundTripTest {
 
   @Test
   public void shouldHaveAcceptableLatency() throws Exception {
-    EchoServerManager echoServerManager = new EchoServerManager();
+    EchoServerManager echoServerManager = new EchoServerManager(new Processor.IdentityProcessor());
     Port serverPort = echoServerManager.startAndListen();
-    ConnectionKeepingBlockingClient client = new ConnectionKeepingBlockingClient(serverPort);
-    client.connect();
+    Client client = ConnectionKeepingBlockingClient.connectedTo(getLocalHost(), serverPort);
     final RoundTrip roundTrip = new RoundTrip(client);
 
     final JLBHResultConsumer results = newThreadSafeInstance();
@@ -57,11 +58,7 @@ public class RoundTripTest {
     jlbh.start();
 
     // then
-    JLBHResult.RunResult latency = results.get().endToEnd().summaryOfLastRun();
-    assertThat(String.format("Worst end to end latency was %d microseconds", latency.getWorst().toNanos() / 1000),
-            latency.getWorst(), lessThan(ms(5)));
-    assertThat(String.format("99.9th percentile latency was %d microseconds", latency.getWorst().toNanos() / 1000),
-            latency.get999thPercentile(), lessThan(us(200)));
+    verifyExpectationsOf(results.get().endToEnd().summaryOfLastRun());
 
     // cleanup
     client.close();
@@ -77,6 +74,13 @@ public class RoundTripTest {
             .recordOSJitter(true)
             .accountForCoordinatedOmmission(true)
             .jlbhTask(new BlockingTask(roundTrip));
+  }
+
+  private void verifyExpectationsOf(JLBHResult.RunResult latency) {
+    assertThat(String.format("Worst end to end latency was %d microseconds", latency.getWorst().toNanos() / 1000),
+            latency.getWorst(), lessThan(ms(5)));
+    assertThat(String.format("99.9th percentile latency was %d microseconds", latency.get999thPercentile().toNanos() / 1000),
+            latency.get999thPercentile(), lessThan(us(200)));
   }
 
   private Duration us(int us) {

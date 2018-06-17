@@ -9,9 +9,9 @@ import static java.util.Objects.requireNonNull;
  */
 public class RoundTrip {
 
-  private final ConnectionKeepingBlockingClient client;
+  private final Client client;
 
-  public RoundTrip(ConnectionKeepingBlockingClient client) {
+  public RoundTrip(Client client) {
     this.client = requireNonNull(client);
   }
 
