@@ -2,15 +2,6 @@ package com.michaelszymczak.samples.sockets;
 
 import org.junit.Test;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static java.net.InetAddress.getLocalHost;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -18,38 +9,22 @@ import static org.junit.Assert.assertEquals;
  */
 public class EchoServerTest {
 
-  ExecutorService executor = Executors.newSingleThreadExecutor();
-
   @Test(timeout = 2000)
-  public void shouldStartAndStop() throws Exception {
-    EchoServer server = new EchoServer();
-    int serverPort = server.start();
-    Future<?> listened = executor.submit(server::listen);
-    Thread.sleep(10);
-    long result = 0;
-    Socket client = new Socket(getLocalHost(), serverPort);
-    try (
-            DataOutputStream out = new DataOutputStream(client.getOutputStream());
-            DataInputStream in = new DataInputStream(client.getInputStream())
-    ) {
-      out.writeLong(12345L);
-      result = in.readLong();
-    }
+  public void shouldRespondWithTheSameValue() throws Exception {
+    EchoServerManager echoServerManager = new EchoServerManager();
+    Port serverPort = echoServerManager.startAndListen();
+    OneOffBlockingClient client = new OneOffBlockingClient(serverPort);
+
+    // when
+    long result1 = client.send(12345L);
+
 
     // then
-    assertEquals(12345L, result);
+    assertEquals(12345L, result1);
 
 
     // cleanup
-    listened.get(1, TimeUnit.SECONDS);
-    executor.submit(server::stop).get();
-    shutdownExecutor();
-  }
-
-  private void shutdownExecutor() throws InterruptedException {
-    executor.shutdown();
-    executor.awaitTermination(1, TimeUnit.SECONDS);
-    executor.shutdownNow();
+    echoServerManager.stop();
   }
 
 

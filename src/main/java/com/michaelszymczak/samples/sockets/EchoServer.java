@@ -1,5 +1,6 @@
 package com.michaelszymczak.samples.sockets;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -25,16 +26,19 @@ public class EchoServer {
     this.port = 0;
   }
 
-  public int start() throws IOException {
+  public Port start() throws IOException {
     this.serverSocket = new ServerSocket(port);
-    return serverSocket.getLocalPort();
+    return new Port(serverSocket.getLocalPort());
   }
 
   public void listen() {
     try {
       this.clientSocket = serverSocket.accept();
-      try (DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream())) {
-        out.writeLong(12345L);
+      try (
+              DataInputStream in = new DataInputStream(clientSocket.getInputStream());
+              DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream())
+      ) {
+        out.writeLong(in.readLong());
       }
     } catch (Exception e) {
       throw new RuntimeException(e);
